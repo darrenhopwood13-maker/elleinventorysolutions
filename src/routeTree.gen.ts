@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
+import { Route as AuthenticatedAdminBrainsRouteImport } from './routes/_authenticated/admin.brains'
 import { Route as ApiPublicReportsTokenRouteImport } from './routes/api/public/reports/$token'
 import { Route as AuthenticatedPropertiesIdReviewRouteImport } from './routes/_authenticated/properties.$id.review'
 import { Route as AuthenticatedPropertiesIdPhotosRouteImport } from './routes/_authenticated/properties.$id.photos'
@@ -51,6 +52,12 @@ const AuthenticatedPropertiesIdRoute =
     path: '/properties/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminBrainsRoute =
+  AuthenticatedAdminBrainsRouteImport.update({
+    id: '/admin/brains',
+    path: '/admin/brains',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicReportsTokenRoute = ApiPublicReportsTokenRouteImport.update({
   id: '/api/public/reports/$token',
   path: '/api/public/reports/$token',
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/brains': typeof AuthenticatedAdminBrainsRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
@@ -90,6 +98,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/brains': typeof AuthenticatedAdminBrainsRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
@@ -103,6 +112,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/admin/brains': typeof AuthenticatedAdminBrainsRoute
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/admin/brains'
     | '/properties/$id'
     | '/properties/new'
     | '/properties/$id/photos'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/admin/brains'
     | '/properties/$id'
     | '/properties/new'
     | '/properties/$id/photos'
@@ -139,6 +151,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/admin/brains'
     | '/_authenticated/properties/$id'
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/$id/photos'
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/brains': {
+      id: '/_authenticated/admin/brains'
+      path: '/admin/brains'
+      fullPath: '/admin/brains'
+      preLoaderRoute: typeof AuthenticatedAdminBrainsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/reports/$token': {
       id: '/api/public/reports/$token'
       path: '/api/public/reports/$token'
@@ -250,12 +270,14 @@ const AuthenticatedPropertiesIdRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedAdminBrainsRoute: typeof AuthenticatedAdminBrainsRoute
   AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRouteWithChildren
   AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedAdminBrainsRoute: AuthenticatedAdminBrainsRoute,
   AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRouteWithChildren,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
 }
