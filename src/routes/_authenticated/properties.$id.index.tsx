@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +52,6 @@ function reportPhotosPath(propertyId: string, reportId: string) {
 
 function PropertyDetail() {
   const { id } = Route.useParams();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -87,25 +86,8 @@ function PropertyDetail() {
 
   const latestReport = reports?.[0];
 
-  async function navigateToReportPhotos(propertyId: string, reportId: string) {
-    try {
-      await navigate({
-        to: "/properties/$id/photos",
-        params: { id: propertyId },
-        search: { reportId },
-      });
-
-      window.setTimeout(() => {
-        const expectedPath = `/properties/${propertyId}/photos`;
-        const currentReportId = new URLSearchParams(window.location.search).get("reportId");
-        if (window.location.pathname !== expectedPath || currentReportId !== reportId) {
-          window.location.assign(reportPhotosPath(propertyId, reportId));
-        }
-      }, 250);
-    } catch (err) {
-      console.error("[property] navigate to photos failed", err);
-      window.location.assign(reportPhotosPath(propertyId, reportId));
-    }
+  function navigateToReportPhotos(propertyId: string, reportId: string) {
+    window.location.assign(reportPhotosPath(propertyId, reportId));
   }
 
   async function handleExteriorUpload(file: File) {
@@ -155,18 +137,17 @@ function PropertyDetail() {
       if (error) throw error;
       if (!report?.id) throw new Error("Report was not created");
 
-      // Non-blocking: status update failure must not prevent navigation.
-      supabase
+      // Status update failure must not prevent navigation, but complete the
+      // request before leaving the page so the browser does not abort it.
+      const { error: statusErr } = await supabase
         .from("properties")
         .update({ status: STATUS_FOR_REPORT[type] })
-        .eq("id", property.id)
-        .then(({ error: statusErr }) => {
-          if (statusErr) console.error("[property] status update failed", statusErr);
-        });
+        .eq("id", property.id);
+      if (statusErr) console.error("[property] status update failed", statusErr);
 
       setDialogOpen(false);
       toast.success(`${type} report started`);
-      await navigateToReportPhotos(property.id, report.id);
+      navigateToReportPhotos(property.id, report.id);
     } catch (err) {
       console.error("[property] create report failed", err);
       toast.error(err instanceof Error ? err.message : "Could not create report");
@@ -177,7 +158,7 @@ function PropertyDetail() {
 
   async function openReport(r: { id: string; status: string }) {
     if (r.status === "draft") {
-      await navigateToReportPhotos(id, r.id);
+      navigateToReportPhotos(id, r.id);
     } else {
       toast("Completed report view coming soon");
     }
@@ -345,6 +326,10 @@ function PropertyDetail() {
                       to="/properties/$id/photos"
                       params={{ id }}
                       search={{ reportId: r.id }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigateToReportPhotos(id, r.id);
+                      }}
                       className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       {content}
