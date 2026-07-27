@@ -46,6 +46,10 @@ function formatDate(iso: string) {
   });
 }
 
+function reportPhotosPath(propertyId: string, reportId: string) {
+  return `/properties/${encodeURIComponent(propertyId)}/photos?reportId=${encodeURIComponent(reportId)}`;
+}
+
 function PropertyDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -82,6 +86,27 @@ function PropertyDetail() {
   });
 
   const latestReport = reports?.[0];
+
+  async function navigateToReportPhotos(propertyId: string, reportId: string) {
+    try {
+      await navigate({
+        to: "/properties/$id/photos",
+        params: { id: propertyId },
+        search: { reportId },
+      });
+
+      window.setTimeout(() => {
+        const expectedPath = `/properties/${propertyId}/photos`;
+        const currentReportId = new URLSearchParams(window.location.search).get("reportId");
+        if (window.location.pathname !== expectedPath || currentReportId !== reportId) {
+          window.location.assign(reportPhotosPath(propertyId, reportId));
+        }
+      }, 250);
+    } catch (err) {
+      console.error("[property] navigate to photos failed", err);
+      window.location.assign(reportPhotosPath(propertyId, reportId));
+    }
+  }
 
   async function handleExteriorUpload(file: File) {
     if (!property) return;
@@ -141,11 +166,7 @@ function PropertyDetail() {
 
       setDialogOpen(false);
       toast.success(`${type} report started`);
-      await navigate({
-        to: "/properties/$id/photos",
-        params: { id: property.id },
-        search: { reportId: report.id },
-      });
+      await navigateToReportPhotos(property.id, report.id);
     } catch (err) {
       console.error("[property] create report failed", err);
       toast.error(err instanceof Error ? err.message : "Could not create report");
@@ -156,11 +177,7 @@ function PropertyDetail() {
 
   async function openReport(r: { id: string; status: string }) {
     if (r.status === "draft") {
-      await navigate({
-        to: "/properties/$id/photos",
-        params: { id },
-        search: { reportId: r.id },
-      });
+      await navigateToReportPhotos(id, r.id);
     } else {
       toast("Completed report view coming soon");
     }
@@ -297,33 +314,55 @@ function PropertyDetail() {
 
           <div className="mt-4 space-y-3">
             {reports && reports.length > 0 ? (
-              reports.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => openReport(r)}
-                  className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <div>
-                    <p className="text-xl font-semibold text-foreground">
-                      {r.report_type}
-                    </p>
-                    <p className="mt-1 text-base text-muted-foreground">
-                      {formatDate(r.created_at)}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      "rounded-full px-3 py-1 text-sm font-medium " +
-                      (r.status === "draft"
-                        ? "bg-secondary text-secondary-foreground"
-                        : "bg-primary/10 text-primary")
-                    }
+              reports.map((r) => {
+                const content = (
+                  <>
+                    <div>
+                      <p className="text-xl font-semibold text-foreground">
+                        {r.report_type}
+                      </p>
+                      <p className="mt-1 text-base text-muted-foreground">
+                        {formatDate(r.created_at)}
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        "rounded-full px-3 py-1 text-sm font-medium " +
+                        (r.status === "draft"
+                          ? "bg-secondary text-secondary-foreground"
+                          : "bg-primary/10 text-primary")
+                      }
+                    >
+                      {r.status === "draft" ? "Draft" : "Complete"}
+                    </span>
+                  </>
+                );
+
+                if (r.status === "draft") {
+                  return (
+                    <Link
+                      key={r.id}
+                      to="/properties/$id/photos"
+                      params={{ id }}
+                      search={{ reportId: r.id }}
+                      className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      {content}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => openReport(r)}
+                    className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-5 text-left transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    {r.status === "draft" ? "Draft" : "Complete"}
-                  </span>
-                </button>
-              ))
+                    {content}
+                  </button>
+                );
+              })
             ) : (
               <p className="text-lg text-muted-foreground">No reports yet.</p>
             )}
