@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [q, setQ] = useState("");
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties"],
@@ -31,6 +33,16 @@ function Dashboard() {
       return data;
     },
   });
+
+  const filtered = useMemo(() => {
+    if (!properties) return [];
+    const term = q.trim().toLowerCase();
+    if (!term) return properties;
+    return properties.filter((p) =>
+      [p.address, p.postcode, p.client_name ?? ""]
+        .some((f) => f.toLowerCase().includes(term)),
+    );
+  }, [properties, q]);
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -55,25 +67,42 @@ function Dashboard() {
           </Button>
         </div>
 
+        <div className="mt-8">
+          <Input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search address, postcode or client"
+            aria-label="Search properties"
+            className="h-14 text-lg"
+          />
+        </div>
+
         <div className="mt-10 space-y-4">
           {isLoading ? (
             <p className="text-lg text-muted-foreground">Loading…</p>
-          ) : properties && properties.length > 0 ? (
-            properties.map((p) => (
-              <div
+          ) : filtered.length > 0 ? (
+            filtered.map((p) => (
+              <Link
                 key={p.id}
-                className="rounded-lg border border-border bg-card p-5"
+                to="/properties/$id"
+                params={{ id: p.id }}
+                className="block rounded-lg border border-border bg-card p-5 transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <p className="text-xl font-semibold text-foreground">{p.address}</p>
+                <p className="text-2xl font-semibold text-foreground">{p.address}</p>
                 <p className="mt-1 text-base text-muted-foreground">{p.postcode}</p>
                 {p.client_name ? (
-                  <p className="mt-1 text-base text-muted-foreground">{p.client_name}</p>
+                  <p className="mt-1 text-lg text-foreground/80">{p.client_name}</p>
                 ) : null}
                 <p className="mt-3 inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium">
                   {p.status}
                 </p>
-              </div>
+              </Link>
             ))
+          ) : properties && properties.length > 0 ? (
+            <p className="text-lg text-muted-foreground">
+              No properties match “{q}”.
+            </p>
           ) : (
             <p className="text-lg text-muted-foreground">
               No properties yet. Add your first one to begin.
