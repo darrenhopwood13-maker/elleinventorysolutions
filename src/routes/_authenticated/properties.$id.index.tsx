@@ -26,7 +26,7 @@ const STATUS_FOR_REPORT: Record<
   Update: "In Tenancy",
 };
 
-export const Route = createFileRoute("/_authenticated/properties/$id")({
+export const Route = createFileRoute("/_authenticated/properties/$id/")({
   head: () => ({
     meta: [
       { title: "Property — Elle Inventory Solutions" },
