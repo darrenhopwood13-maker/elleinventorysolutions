@@ -307,7 +307,7 @@ async function buildDocx(args: {
 }): Promise<Uint8Array> {
   const { property, report, dateStr, orderedRooms, itemsByRoom, cache } = args;
 
-  const children: Paragraph[] | Array<Paragraph | Table> = [];
+  const children: Array<Paragraph | Table | TableOfContents> = [];
 
   // Title page
   children.push(new Paragraph({ children: [new TextRun("")], spacing: { before: 2400 } }));
