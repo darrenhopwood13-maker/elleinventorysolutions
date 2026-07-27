@@ -31,6 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { generateReport } from "@/lib/report.functions";
 
 const searchSchema = z.object({
   reportId: z.string().uuid().optional(),
@@ -87,16 +89,26 @@ function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Item | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Item | null>(null);
+  const [reportStatus, setReportStatus] = useState<"draft" | "complete" | null>(null);
+  const [docxPath, setDocxPath] = useState<string | null>(null);
+  const [pdfPath, setPdfPath] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const runGenerate = useServerFn(generateReport);
 
   async function loadAll() {
     if (!reportId) return;
     setLoading(true);
     const { data: report } = await supabase
       .from("reports")
-      .select("id, report_type")
+      .select("id, report_type, status, docx_path, pdf_path")
       .eq("id", reportId)
       .maybeSingle();
-    if (report) setReportType(report.report_type as ReportType);
+    if (report) {
+      setReportType(report.report_type as ReportType);
+      setReportStatus((report as { status: "draft" | "complete" }).status);
+      setDocxPath((report as { docx_path: string | null }).docx_path ?? null);
+      setPdfPath((report as { pdf_path: string | null }).pdf_path ?? null);
+    }
 
     const { data: rms } = await supabase
       .from("rooms")
