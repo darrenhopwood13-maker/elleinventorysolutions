@@ -143,6 +143,7 @@ export type Database = {
           previous_report_id: string | null
           property_id: string
           report_type: Database["public"]["Enums"]["report_type"]
+          share_token: string | null
           status: Database["public"]["Enums"]["report_status"]
         }
         Insert: {
@@ -153,6 +154,7 @@ export type Database = {
           previous_report_id?: string | null
           property_id: string
           report_type: Database["public"]["Enums"]["report_type"]
+          share_token?: string | null
           status?: Database["public"]["Enums"]["report_status"]
         }
         Update: {
@@ -163,6 +165,7 @@ export type Database = {
           previous_report_id?: string | null
           property_id?: string
           report_type?: Database["public"]["Enums"]["report_type"]
+          share_token?: string | null
           status?: Database["public"]["Enums"]["report_status"]
         }
         Relationships: [
