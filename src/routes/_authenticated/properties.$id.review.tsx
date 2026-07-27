@@ -291,6 +291,30 @@ function ReviewPage() {
               + Add item manually
             </Link>
           </Button>
+          <ReportGenerationPanel
+            reportId={reportId}
+            status={reportStatus}
+            docxPath={docxPath}
+            pdfPath={pdfPath}
+            generating={generating}
+            onGenerate={async () => {
+              if (!reportId) return;
+              setGenerating(true);
+              try {
+                const res = await runGenerate({ data: { reportId } });
+                setDocxPath(res.docxPath);
+                setPdfPath(res.pdfPath);
+                setReportStatus("complete");
+                toast.success("Report generated");
+              } catch (err) {
+                toast.error(
+                  err instanceof Error ? err.message : "Could not generate report",
+                );
+              } finally {
+                setGenerating(false);
+              }
+            }}
+          />
         </div>
       </div>
 
