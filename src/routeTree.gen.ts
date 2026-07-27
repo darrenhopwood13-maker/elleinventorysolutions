@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
+import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
 import { Route as AuthenticatedAdminBrainsRouteImport } from './routes/_authenticated/admin.brains'
 import { Route as AuthenticatedPropertiesIdIndexRouteImport } from './routes/_authenticated/properties.$id.index'
 import { Route as ApiPublicReportsTokenRouteImport } from './routes/api/public/reports/$token'
@@ -46,6 +47,12 @@ const AuthenticatedPropertiesNewRoute =
     path: '/properties/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPropertiesIdRoute =
+  AuthenticatedPropertiesIdRouteImport.update({
+    id: '/properties/$id',
+    path: '/properties/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminBrainsRoute =
   AuthenticatedAdminBrainsRouteImport.update({
     id: '/admin/brains',
@@ -54,9 +61,9 @@ const AuthenticatedAdminBrainsRoute =
   } as any)
 const AuthenticatedPropertiesIdIndexRoute =
   AuthenticatedPropertiesIdIndexRouteImport.update({
-    id: '/properties/$id/',
-    path: '/properties/$id/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
   } as any)
 const ApiPublicReportsTokenRoute = ApiPublicReportsTokenRouteImport.update({
   id: '/api/public/reports/$token',
@@ -65,21 +72,21 @@ const ApiPublicReportsTokenRoute = ApiPublicReportsTokenRouteImport.update({
 } as any)
 const AuthenticatedPropertiesIdReviewRoute =
   AuthenticatedPropertiesIdReviewRouteImport.update({
-    id: '/properties/$id/review',
-    path: '/properties/$id/review',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/review',
+    path: '/review',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
   } as any)
 const AuthenticatedPropertiesIdPhotosRoute =
   AuthenticatedPropertiesIdPhotosRouteImport.update({
-    id: '/properties/$id/photos',
-    path: '/properties/$id/photos',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/photos',
+    path: '/photos',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
   } as any)
 const AuthenticatedPropertiesIdItemsNewRoute =
   AuthenticatedPropertiesIdItemsNewRouteImport.update({
-    id: '/properties/$id/items/new',
-    path: '/properties/$id/items/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/items/new',
+    path: '/items/new',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/brains': typeof AuthenticatedAdminBrainsRoute
+  '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/admin/brains': typeof AuthenticatedAdminBrainsRoute
+  '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/_authenticated/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/admin/brains'
+    | '/properties/$id'
     | '/properties/new'
     | '/properties/$id/photos'
     | '/properties/$id/review'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/admin/brains'
+    | '/_authenticated/properties/$id'
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/$id/photos'
     | '/_authenticated/properties/$id/review'
@@ -204,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/properties/$id': {
+      id: '/_authenticated/properties/$id'
+      path: '/properties/$id'
+      fullPath: '/properties/$id'
+      preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/brains': {
       id: '/_authenticated/admin/brains'
       path: '/admin/brains'
@@ -213,10 +231,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/properties/$id/': {
       id: '/_authenticated/properties/$id/'
-      path: '/properties/$id'
+      path: '/'
       fullPath: '/properties/$id/'
       preLoaderRoute: typeof AuthenticatedPropertiesIdIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
     }
     '/api/public/reports/$token': {
       id: '/api/public/reports/$token'
@@ -227,47 +245,61 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/properties/$id/review': {
       id: '/_authenticated/properties/$id/review'
-      path: '/properties/$id/review'
+      path: '/review'
       fullPath: '/properties/$id/review'
       preLoaderRoute: typeof AuthenticatedPropertiesIdReviewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
     }
     '/_authenticated/properties/$id/photos': {
       id: '/_authenticated/properties/$id/photos'
-      path: '/properties/$id/photos'
+      path: '/photos'
       fullPath: '/properties/$id/photos'
       preLoaderRoute: typeof AuthenticatedPropertiesIdPhotosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
     }
     '/_authenticated/properties/$id/items/new': {
       id: '/_authenticated/properties/$id/items/new'
-      path: '/properties/$id/items/new'
+      path: '/items/new'
       fullPath: '/properties/$id/items/new'
       preLoaderRoute: typeof AuthenticatedPropertiesIdItemsNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
     }
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedAdminBrainsRoute: typeof AuthenticatedAdminBrainsRoute
-  AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
+interface AuthenticatedPropertiesIdRouteChildren {
   AuthenticatedPropertiesIdPhotosRoute: typeof AuthenticatedPropertiesIdPhotosRoute
   AuthenticatedPropertiesIdReviewRoute: typeof AuthenticatedPropertiesIdReviewRoute
   AuthenticatedPropertiesIdIndexRoute: typeof AuthenticatedPropertiesIdIndexRoute
   AuthenticatedPropertiesIdItemsNewRoute: typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 
+const AuthenticatedPropertiesIdRouteChildren: AuthenticatedPropertiesIdRouteChildren =
+  {
+    AuthenticatedPropertiesIdPhotosRoute: AuthenticatedPropertiesIdPhotosRoute,
+    AuthenticatedPropertiesIdReviewRoute: AuthenticatedPropertiesIdReviewRoute,
+    AuthenticatedPropertiesIdIndexRoute: AuthenticatedPropertiesIdIndexRoute,
+    AuthenticatedPropertiesIdItemsNewRoute:
+      AuthenticatedPropertiesIdItemsNewRoute,
+  }
+
+const AuthenticatedPropertiesIdRouteWithChildren =
+  AuthenticatedPropertiesIdRoute._addFileChildren(
+    AuthenticatedPropertiesIdRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedAdminBrainsRoute: typeof AuthenticatedAdminBrainsRoute
+  AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRouteWithChildren
+  AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
+}
+
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedAdminBrainsRoute: AuthenticatedAdminBrainsRoute,
+  AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRouteWithChildren,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
-  AuthenticatedPropertiesIdPhotosRoute: AuthenticatedPropertiesIdPhotosRoute,
-  AuthenticatedPropertiesIdReviewRoute: AuthenticatedPropertiesIdReviewRoute,
-  AuthenticatedPropertiesIdIndexRoute: AuthenticatedPropertiesIdIndexRoute,
-  AuthenticatedPropertiesIdItemsNewRoute:
-    AuthenticatedPropertiesIdItemsNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -282,3 +314,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
