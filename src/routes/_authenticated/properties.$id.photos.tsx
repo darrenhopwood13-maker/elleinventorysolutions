@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -69,7 +69,6 @@ function reportReviewPath(
 function PhotosPage() {
   const { id: propertyId } = Route.useParams();
   const { reportId } = Route.useSearch();
-  const navigate = useNavigate();
   const analyze = useServerFn(analyzeItemPhoto);
   const inputRef = useRef<HTMLInputElement>(null);
 
