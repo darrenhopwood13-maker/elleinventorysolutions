@@ -14,7 +14,232 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      brains: {
+        Row: {
+          id: string
+          prompt_content: string
+          report_type: Database["public"]["Enums"]["report_type"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          id?: string
+          prompt_content: string
+          report_type: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          id?: string
+          prompt_content?: string
+          report_type?: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          check_in_comment: string | null
+          check_out_comment: string | null
+          condition: string | null
+          created_at: string
+          description: string | null
+          edited: boolean
+          id: string
+          item_name: string | null
+          photo_url: string | null
+          report_id: string
+          room_id: string | null
+          source: Database["public"]["Enums"]["item_source"]
+          update_comment: string | null
+        }
+        Insert: {
+          check_in_comment?: string | null
+          check_out_comment?: string | null
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          edited?: boolean
+          id?: string
+          item_name?: string | null
+          photo_url?: string | null
+          report_id: string
+          room_id?: string | null
+          source?: Database["public"]["Enums"]["item_source"]
+          update_comment?: string | null
+        }
+        Update: {
+          check_in_comment?: string | null
+          check_out_comment?: string | null
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          edited?: boolean
+          id?: string
+          item_name?: string | null
+          photo_url?: string | null
+          report_id?: string
+          room_id?: string | null
+          source?: Database["public"]["Enums"]["item_source"]
+          update_comment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      properties: {
+        Row: {
+          address: string
+          client_name: string | null
+          created_at: string
+          exterior_photo_url: string | null
+          id: string
+          postcode: string
+          status: Database["public"]["Enums"]["property_status"]
+          user_id: string
+        }
+        Insert: {
+          address: string
+          client_name?: string | null
+          created_at?: string
+          exterior_photo_url?: string | null
+          id?: string
+          postcode: string
+          status?: Database["public"]["Enums"]["property_status"]
+          user_id: string
+        }
+        Update: {
+          address?: string
+          client_name?: string | null
+          created_at?: string
+          exterior_photo_url?: string | null
+          id?: string
+          postcode?: string
+          status?: Database["public"]["Enums"]["property_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          previous_report_id: string | null
+          property_id: string
+          report_type: Database["public"]["Enums"]["report_type"]
+          status: Database["public"]["Enums"]["report_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          previous_report_id?: string | null
+          property_id: string
+          report_type: Database["public"]["Enums"]["report_type"]
+          status?: Database["public"]["Enums"]["report_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          previous_report_id?: string | null
+          property_id?: string
+          report_type?: Database["public"]["Enums"]["report_type"]
+          status?: Database["public"]["Enums"]["report_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_previous_report_id_fkey"
+            columns: ["previous_report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          report_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          report_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          report_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wide_shots: {
+        Row: {
+          created_at: string
+          id: string
+          photo_url: string
+          room_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_url: string
+          room_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_url?: string
+          room_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wide_shots_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +248,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      item_source: "ai" | "manual"
+      property_status:
+        | "Inventory Pending"
+        | "Awaiting Check In"
+        | "In Tenancy"
+        | "Check Out Booked"
+        | "Check Out Complete"
+      report_status: "draft" | "complete"
+      report_type: "Inventory" | "Check In" | "Check Out" | "Update"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +383,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      item_source: ["ai", "manual"],
+      property_status: [
+        "Inventory Pending",
+        "Awaiting Check In",
+        "In Tenancy",
+        "Check Out Booked",
+        "Check Out Complete",
+      ],
+      report_status: ["draft", "complete"],
+      report_type: ["Inventory", "Check In", "Check Out", "Update"],
+    },
   },
 } as const
