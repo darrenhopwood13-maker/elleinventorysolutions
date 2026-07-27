@@ -17,6 +17,7 @@ import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
 import { Route as AuthenticatedPropertiesIdReviewRouteImport } from './routes/_authenticated/properties.$id.review'
 import { Route as AuthenticatedPropertiesIdPhotosRouteImport } from './routes/_authenticated/properties.$id.photos'
+import { Route as AuthenticatedPropertiesIdItemsNewRouteImport } from './routes/_authenticated/properties.$id.items.new'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -61,6 +62,12 @@ const AuthenticatedPropertiesIdPhotosRoute =
     path: '/photos',
     getParentRoute: () => AuthenticatedPropertiesIdRoute,
   } as any)
+const AuthenticatedPropertiesIdItemsNewRoute =
+  AuthenticatedPropertiesIdItemsNewRouteImport.update({
+    id: '/items/new',
+    path: '/items/new',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
+  '/properties/$id/items/new': typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -79,6 +87,7 @@ export interface FileRoutesByTo {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
+  '/properties/$id/items/new': typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,6 +99,7 @@ export interface FileRoutesById {
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/_authenticated/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
+  '/_authenticated/properties/$id/items/new': typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/properties/$id/photos'
     | '/properties/$id/review'
+    | '/properties/$id/items/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,6 +121,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/properties/$id/photos'
     | '/properties/$id/review'
+    | '/properties/$id/items/new'
   id:
     | '__root__'
     | '/'
@@ -120,6 +132,7 @@ export interface FileRouteTypes {
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/$id/photos'
     | '/_authenticated/properties/$id/review'
+    | '/_authenticated/properties/$id/items/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -186,18 +199,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesIdPhotosRouteImport
       parentRoute: typeof AuthenticatedPropertiesIdRoute
     }
+    '/_authenticated/properties/$id/items/new': {
+      id: '/_authenticated/properties/$id/items/new'
+      path: '/items/new'
+      fullPath: '/properties/$id/items/new'
+      preLoaderRoute: typeof AuthenticatedPropertiesIdItemsNewRouteImport
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
+    }
   }
 }
 
 interface AuthenticatedPropertiesIdRouteChildren {
   AuthenticatedPropertiesIdPhotosRoute: typeof AuthenticatedPropertiesIdPhotosRoute
   AuthenticatedPropertiesIdReviewRoute: typeof AuthenticatedPropertiesIdReviewRoute
+  AuthenticatedPropertiesIdItemsNewRoute: typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 
 const AuthenticatedPropertiesIdRouteChildren: AuthenticatedPropertiesIdRouteChildren =
   {
     AuthenticatedPropertiesIdPhotosRoute: AuthenticatedPropertiesIdPhotosRoute,
     AuthenticatedPropertiesIdReviewRoute: AuthenticatedPropertiesIdReviewRoute,
+    AuthenticatedPropertiesIdItemsNewRoute:
+      AuthenticatedPropertiesIdItemsNewRoute,
   }
 
 const AuthenticatedPropertiesIdRouteWithChildren =

@@ -270,6 +270,15 @@ function ReviewPage() {
             {reportType ? `${reportType} report` : "Report"} · {items.length} items ·{" "}
             {itemsByRoom.get("unallocated")?.length ?? 0} unallocated
           </p>
+          <Button asChild size="lg" className="mt-6 h-14 text-lg">
+            <Link
+              to="/properties/$id/items/new"
+              params={{ id }}
+              search={{ reportId }}
+            >
+              + Add item manually
+            </Link>
+          </Button>
         </div>
       </div>
 
