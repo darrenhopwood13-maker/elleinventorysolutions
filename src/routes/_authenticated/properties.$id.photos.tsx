@@ -38,6 +38,24 @@ type Stage =
   | { kind: "processing"; done: number; total: number; message: string };
 
 const WIDE_SHOTS_PER_ROOM = 3;
+const UPLOAD_CONCURRENCY = 12;
+const ANALYZE_CONCURRENCY = 12;
+
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<void>,
+) {
+  let cursor = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (true) {
+      const i = cursor++;
+      if (i >= items.length) return;
+      await worker(items[i], i);
+    }
+  });
+  await Promise.all(runners);
+}
 
 function PhotosPage() {
   const { id: propertyId } = Route.useParams();
@@ -125,13 +143,15 @@ function PhotosPage() {
     const total = photos.length;
     setStage({ kind: "processing", done: 0, total, message: "Uploading photos…" });
 
-    // Upload all photos first
-    const uploaded: Array<{ photo: LocalPhoto; path: string; signedUrl: string }> = [];
+    // Upload all photos in parallel (bounded concurrency).
+    const uploaded: Array<{ photo: LocalPhoto; path: string; signedUrl: string } | null> =
+      new Array(photos.length).fill(null);
+    let uploadedDone = 0;
+    const uploadStart = Date.now();
     try {
-      for (let i = 0; i < photos.length; i++) {
-        const p = photos[i];
+      await runWithConcurrency(photos, UPLOAD_CONCURRENCY, async (p, i) => {
         const ext = p.file.name.split(".").pop() || "jpg";
-        const path = `${userId}/${propertyId}/${reportId}/${Date.now()}-${i}.${ext}`;
+        const path = `${userId}/${propertyId}/${reportId}/${uploadStart}-${i}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("property-photos")
           .upload(path, p.file, { contentType: p.file.type, upsert: false });
@@ -140,146 +160,169 @@ function PhotosPage() {
           .from("property-photos")
           .createSignedUrl(path, 60 * 60 * 24 * 365);
         if (signErr) throw signErr;
-        uploaded.push({ photo: p, path, signedUrl: signed.signedUrl });
+        uploaded[i] = { photo: p, path, signedUrl: signed.signedUrl };
+        uploadedDone += 1;
         setStage({
           kind: "processing",
-          done: i + 1,
+          done: uploadedDone,
           total,
-          message: `Uploading photos (${i + 1} of ${total})…`,
+          message: `Uploading photos (${uploadedDone} of ${total})…`,
         });
-      }
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
       setStage({ kind: "idle" });
       return;
     }
 
-    // Walk photos in order, grouping wide shots into rooms.
+    const uploads = uploaded as Array<{ photo: LocalPhoto; path: string; signedUrl: string }>;
+
+    // Pre-compute room assignments by walking photos in order and creating
+    // a room every WIDE_SHOTS_PER_ROOM wide shots. Rooms are created
+    // sequentially so wide-shot groups keep their order.
+    type Assignment = { roomId: string | null; wideGroup: number | null; wideIdx: number };
+    const assignments: Assignment[] = new Array(uploads.length);
+    const rooms: Array<{ id: string; wideIndices: number[] }> = [];
+    let wideBuf: number[] = [];
     let currentRoomId: string | null = null;
-    let wideBuffer: typeof uploaded = [];
-    let roomCount = 0;
-    let itemsProcessed = 0;
-    let unallocated = 0;
-
-    async function flushWideBuffer() {
-      if (wideBuffer.length < WIDE_SHOTS_PER_ROOM) return;
-      roomCount += 1;
-      const { data: room, error: roomErr } = await supabase
-        .from("rooms")
-        .insert({
-          report_id: reportId!,
-          name: `Room ${roomCount}`,
-          sort_order: roomCount,
-        })
-        .select("id")
-        .single();
-      if (roomErr) throw roomErr;
-      currentRoomId = room.id;
-
-      const wideRows = wideBuffer.map((w, idx) => ({
-        room_id: room.id,
-        photo_url: w.signedUrl,
-        sort_order: idx,
-      }));
-      const { error: wsErr } = await supabase.from("wide_shots").insert(wideRows);
-      if (wsErr) throw wsErr;
-      wideBuffer = [];
-    }
 
     try {
-      for (let i = 0; i < uploaded.length; i++) {
-        const u = uploaded[i];
-
+      for (let i = 0; i < uploads.length; i++) {
+        const u = uploads[i];
         if (u.photo.isWide) {
-          wideBuffer.push(u);
-          if (wideBuffer.length === WIDE_SHOTS_PER_ROOM) {
+          wideBuf.push(i);
+          if (wideBuf.length === WIDE_SHOTS_PER_ROOM) {
+            const roomIndex = rooms.length + 1;
             setStage({
               kind: "processing",
-              done: i,
+              done: 0,
               total,
-              message: `Creating room ${roomCount + 1}…`,
+              message: `Creating room ${roomIndex}…`,
             });
-            await flushWideBuffer();
+            const { data: room, error: roomErr } = await supabase
+              .from("rooms")
+              .insert({
+                report_id: reportId!,
+                name: `Room ${roomIndex}`,
+                sort_order: roomIndex,
+              })
+              .select("id")
+              .single();
+            if (roomErr) throw roomErr;
+            currentRoomId = room.id;
+            const wideRows = wideBuf.map((photoIdx, idx) => ({
+              room_id: room.id,
+              photo_url: uploads[photoIdx].signedUrl,
+              sort_order: idx,
+            }));
+            const { error: wsErr } = await supabase.from("wide_shots").insert(wideRows);
+            if (wsErr) throw wsErr;
+            wideBuf.forEach((photoIdx, idx) => {
+              assignments[photoIdx] = {
+                roomId: room.id,
+                wideGroup: rooms.length,
+                wideIdx: idx,
+              };
+            });
+            rooms.push({ id: room.id, wideIndices: [...wideBuf] });
+            wideBuf = [];
+          } else {
+            // partial buffer — will be filled in below if never completed
+            assignments[i] = { roomId: currentRoomId, wideGroup: null, wideIdx: -1 };
           }
-          setStage({
-            kind: "processing",
-            done: i + 1,
-            total,
-            message: `Processing photo ${i + 1} of ${total}…`,
-          });
-          continue;
+        } else {
+          assignments[i] = { roomId: currentRoomId, wideGroup: null, wideIdx: -1 };
         }
-
-        // Non-wide photo. If wide buffer has partial (<3) shots when a
-        // non-wide arrives, those trailing wides don't form a room — attach
-        // them to current room as wide shots if we have one, else drop back
-        // as items are not wide. For simplicity: leave partial buffer in
-        // place; only complete groups of 3 start new rooms.
-
-        setStage({
-          kind: "processing",
-          done: i,
-          total,
-          message: `Analysing photo ${i + 1} of ${total}…`,
-        });
-
-        let result: {
-          item_name: string;
-          description: string;
-          condition: string;
-          check_in_comment: string;
-          check_out_comment: string;
-          update_comment: string;
-        };
-        try {
-          result = await analyze({
-            data: { photoUrl: u.signedUrl, reportType: report.report_type as never },
-          });
-        } catch (err) {
-          console.error("AI analyse failed", err);
-          const msg = err instanceof Error ? err.message : "";
-          if (/No AI brain is configured/i.test(msg)) {
-            toast.error(msg);
-            setStage({ kind: "idle" });
-            return;
-          }
-          result = {
-            item_name: "Unidentified item",
-            description: "",
-            condition: "",
-            check_in_comment: "",
-            check_out_comment: "",
-            update_comment: "",
-          };
-        }
-
-        const { error: itemErr } = await supabase.from("items").insert({
-          report_id: reportId!,
-          room_id: currentRoomId,
-          photo_url: u.signedUrl,
-          item_name: result.item_name,
-          description: result.description || null,
-          condition: result.condition || null,
-          check_in_comment: result.check_in_comment || null,
-          check_out_comment: result.check_out_comment || null,
-          update_comment: result.update_comment || null,
-          source: "ai",
-          edited: false,
-        });
-        if (itemErr) throw itemErr;
-
-        itemsProcessed += 1;
-        if (!currentRoomId) unallocated += 1;
-
-        setStage({
-          kind: "processing",
-          done: i + 1,
-          total,
-          message: `Processing photo ${i + 1} of ${total}…`,
-        });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Processing failed");
+      toast.error(err instanceof Error ? err.message : "Room setup failed");
+      setStage({ kind: "idle" });
+      return;
+    }
+
+    // Analyse non-wide photos in parallel batches.
+    const itemIndices: number[] = [];
+    for (let i = 0; i < uploads.length; i++) {
+      if (!uploads[i].photo.isWide) itemIndices.push(i);
+    }
+
+    let itemsProcessed = 0;
+    let unallocated = 0;
+    let aborted = false;
+    let abortMessage = "";
+
+    setStage({
+      kind: "processing",
+      done: 0,
+      total: itemIndices.length,
+      message: `Analysing ${itemIndices.length} photo${itemIndices.length === 1 ? "" : "s"}…`,
+    });
+
+    await runWithConcurrency(itemIndices, ANALYZE_CONCURRENCY, async (photoIdx) => {
+      if (aborted) return;
+      const u = uploads[photoIdx];
+      let result: {
+        item_name: string;
+        description: string;
+        condition: string;
+        check_in_comment: string;
+        check_out_comment: string;
+        update_comment: string;
+      };
+      try {
+        result = await analyze({
+          data: { photoUrl: u.signedUrl, reportType: report.report_type as never },
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (/No AI brain is configured/i.test(msg)) {
+          aborted = true;
+          abortMessage = msg;
+          return;
+        }
+        console.error("AI analyse failed", err);
+        result = {
+          item_name: "Unidentified item",
+          description: "",
+          condition: "",
+          check_in_comment: "",
+          check_out_comment: "",
+          update_comment: "",
+        };
+      }
+
+      const assignedRoom = assignments[photoIdx]?.roomId ?? null;
+      const { error: itemErr } = await supabase.from("items").insert({
+        report_id: reportId!,
+        room_id: assignedRoom,
+        photo_url: u.signedUrl,
+        item_name: result.item_name,
+        description: result.description || null,
+        condition: result.condition || null,
+        check_in_comment: result.check_in_comment || null,
+        check_out_comment: result.check_out_comment || null,
+        update_comment: result.update_comment || null,
+        source: "ai",
+        edited: false,
+      });
+      if (itemErr) {
+        aborted = true;
+        abortMessage = itemErr.message;
+        return;
+      }
+
+      itemsProcessed += 1;
+      if (!assignedRoom) unallocated += 1;
+      setStage({
+        kind: "processing",
+        done: itemsProcessed,
+        total: itemIndices.length,
+        message: `Analysed ${itemsProcessed} of ${itemIndices.length}…`,
+      });
+    });
+
+    if (aborted) {
+      toast.error(abortMessage || "Processing failed");
       setStage({ kind: "idle" });
       return;
     }
