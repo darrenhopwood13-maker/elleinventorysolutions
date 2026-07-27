@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { StepIndicator } from "@/components/step-indicator";
 
 type ReportType = "Inventory" | "Check In" | "Check Out" | "Update";
 const REPORT_TYPES: ReportType[] = ["Inventory", "Check In", "Check Out", "Update"];
@@ -187,18 +188,26 @@ function PropertyDetail() {
           <Link to="/dashboard">← Back</Link>
         </Button>
 
-        <h1 className="text-4xl font-bold text-foreground">{property.address}</h1>
-        <p className="mt-2 text-xl text-muted-foreground">{property.postcode}</p>
+        <StepIndicator current="Property" className="mb-8" />
+        <p className="text-xs font-medium uppercase tracking-[0.32em] text-muted-foreground">
+          {property.postcode}
+        </p>
+        <h1 className="font-serif mt-3 text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+          {property.address}
+        </h1>
+        <span className="gold-rule mt-4" aria-hidden />
         {property.client_name ? (
-          <p className="mt-1 text-xl text-foreground/80">{property.client_name}</p>
+          <p className="mt-4 text-xl text-foreground/80">{property.client_name}</p>
         ) : null}
-        <p className="mt-4 inline-block rounded-full bg-secondary px-4 py-1.5 text-base font-medium">
+        <p className="mt-4 inline-block rounded-full border border-gold/50 bg-gold/10 px-4 py-1.5 text-base font-medium">
           {property.status}
         </p>
 
         {/* Exterior photo */}
         <section className="mt-8">
-          <h2 className="text-2xl font-semibold text-foreground">Exterior photo</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-foreground">
+            Exterior photo
+          </h2>
           <div className="mt-4">
             {property.exterior_photo_url ? (
               <img
@@ -243,7 +252,9 @@ function PropertyDetail() {
         {/* Reports */}
         <section className="mt-10">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-semibold text-foreground">Reports</h2>
+            <h2 className="font-serif text-2xl font-medium tracking-tight text-foreground">
+              Reports
+            </h2>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="h-14 px-6 text-lg">
@@ -252,7 +263,9 @@ function PropertyDetail() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle className="text-2xl">Start a new report</DialogTitle>
+                  <DialogTitle className="font-serif text-2xl font-medium">
+                    Start a new report
+                  </DialogTitle>
                 </DialogHeader>
                 <p className="text-base text-muted-foreground">
                   {latestReport

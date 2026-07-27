@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { StepIndicator } from "@/components/step-indicator";
 
 type ReportType = "Inventory" | "Check In" | "Check Out" | "Update";
 
@@ -91,7 +92,14 @@ function NewProperty() {
         <Link to="/dashboard" className="text-base text-muted-foreground underline underline-offset-4">
           ← Back
         </Link>
-        <h1 className="mt-4 text-4xl font-bold text-foreground">New property</h1>
+        <StepIndicator current="Property" className="mt-6" />
+        <h1 className="font-serif mt-8 text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+          New property
+        </h1>
+        <span className="gold-rule mt-4" aria-hidden />
+        <p className="mt-4 text-lg text-muted-foreground">
+          Property first — then photos, review and the finished report.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-8">
           <div className="space-y-2">

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { analyzeItemPhoto } from "@/lib/ai.functions";
+import { StepIndicator } from "@/components/step-indicator";
 
 const searchSchema = z.object({
   reportId: z.string().uuid().optional(),
@@ -284,16 +285,18 @@ function PhotosPage() {
           <Link to="/properties/$id" params={{ id: propertyId }}>← Back</Link>
         </Button>
 
-        <h1 className="text-4xl font-bold text-foreground">
-          {property?.address ?? "Property"}
-        </h1>
+        <StepIndicator current="Upload" className="mb-8" />
         {report ? (
-          <p className="mt-2 text-xl text-muted-foreground">
-            {report.report_type} report — photos
+          <p className="text-xs font-medium uppercase tracking-[0.32em] text-muted-foreground">
+            {report.report_type} report
           </p>
         ) : null}
+        <h1 className="font-serif mt-3 text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+          {property?.address ?? "Property"}
+        </h1>
+        <span className="gold-rule mt-4" aria-hidden />
 
-        <div className="mt-6 rounded-lg border border-border bg-card p-5 text-base leading-relaxed text-foreground/90">
+        <div className="mt-6 rounded-xl border border-border bg-card p-5 text-base leading-relaxed text-foreground/90">
           <p>
             Add photos in the order you take them. Mark <strong>3 wide shots</strong> at
             the start of each new room; the photos that follow are items in that room.

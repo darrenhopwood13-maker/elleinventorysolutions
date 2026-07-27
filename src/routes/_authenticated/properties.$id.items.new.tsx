@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StepIndicator } from "@/components/step-indicator";
 
 const searchSchema = z.object({
   reportId: z.string().uuid().optional(),
@@ -195,8 +196,12 @@ function NewItemPage() {
           </Link>
         </Button>
 
-        <h1 className="text-4xl font-bold text-foreground">Add item manually</h1>
-        <p className="mt-2 text-xl text-muted-foreground">
+        <StepIndicator current="Review" className="mb-8" />
+        <h1 className="font-serif text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+          Add item manually
+        </h1>
+        <span className="gold-rule mt-4" aria-hidden />
+        <p className="mt-4 text-lg text-muted-foreground">
           Fill this in yourself — the AI won't touch it.
         </p>
 

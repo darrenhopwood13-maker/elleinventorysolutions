@@ -33,6 +33,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { generateReport, getShareLink } from "@/lib/report.functions";
+import { StepIndicator } from "@/components/step-indicator";
 
 const searchSchema = z.object({
   reportId: z.string().uuid().optional(),
@@ -131,8 +132,11 @@ function ReportGenerationPanel({
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-border bg-card p-6">
-      <p className="text-2xl font-semibold text-foreground">Report file</p>
+    <div className="mt-8 rounded-xl border border-gold/40 bg-card p-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+      <p className="font-serif text-2xl font-medium tracking-tight text-foreground">
+        Report file
+      </p>
+      <span className="gold-rule mt-3" aria-hidden />
       <p className="mt-1 text-base text-muted-foreground">
         {status === "complete" && hasFiles
           ? "Your report is ready. Regenerating will overwrite it."
@@ -400,8 +404,15 @@ function ReviewPage() {
           <Button asChild variant="ghost" className="mb-4 text-base">
             <Link to="/properties/$id" params={{ id }}>← Back to property</Link>
           </Button>
-          <h1 className="text-4xl font-bold text-foreground">Review items</h1>
-          <p className="mt-2 text-xl text-muted-foreground">
+          <StepIndicator
+            current={reportStatus === "complete" ? "Report" : "Review"}
+            className="mb-8"
+          />
+          <h1 className="font-serif text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+            Review items
+          </h1>
+          <span className="gold-rule mt-4" aria-hidden />
+          <p className="mt-4 text-lg text-muted-foreground">
             {reportType ? `${reportType} report` : "Report"} · {items.length} items ·{" "}
             {itemsByRoom.get("unallocated")?.length ?? 0} unallocated
           </p>
@@ -528,12 +539,13 @@ function RoomDeck({
   return (
     <section>
       <div className="mx-auto max-w-6xl px-6">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-foreground">
           {title}{" "}
           <span className="text-lg font-normal text-muted-foreground">
             ({items.length})
           </span>
         </h2>
+        <span className="gold-rule mt-2" aria-hidden />
       </div>
       {items.length === 0 ? (
         <p className="mx-auto mt-3 max-w-6xl px-6 text-lg text-muted-foreground">

@@ -73,11 +73,15 @@ function AuthPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
       <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold text-foreground">
+        <p className="text-xs font-medium uppercase tracking-[0.32em] text-muted-foreground">
+          Elle Inventory Solutions
+        </p>
+        <span className="gold-rule mt-4" aria-hidden />
+        <h1 className="font-serif mt-5 text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
           {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          Elle Inventory Solutions
+        <p className="mt-3 text-base text-muted-foreground">
+          Continue to your inventory workspace.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">

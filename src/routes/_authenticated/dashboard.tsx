@@ -55,7 +55,15 @@ function Dashboard() {
     <main className="min-h-screen bg-background px-6 py-10">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-4xl font-bold text-foreground">Your properties</h1>
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-[0.32em] text-muted-foreground">
+              Elle Inventory Solutions
+            </p>
+            <h1 className="font-serif mt-3 text-4xl font-medium tracking-tight text-foreground sm:text-5xl">
+              Your properties
+            </h1>
+            <span className="gold-rule mt-4" aria-hidden />
+          </div>
           <Button variant="ghost" onClick={handleSignOut} className="text-base">
             Sign out
           </Button>
@@ -87,14 +95,18 @@ function Dashboard() {
                 key={p.id}
                 to="/properties/$id"
                 params={{ id: p.id }}
-                className="block rounded-lg border border-border bg-card p-5 transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                className="block rounded-xl border border-border bg-card p-6 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition-colors hover:border-gold/60 hover:bg-accent/40 focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <p className="text-2xl font-semibold text-foreground">{p.address}</p>
-                <p className="mt-1 text-base text-muted-foreground">{p.postcode}</p>
+                <p className="font-serif text-2xl font-medium tracking-tight text-foreground">
+                  {p.address}
+                </p>
+                <p className="mt-1 text-sm uppercase tracking-[0.2em] text-muted-foreground">
+                  {p.postcode}
+                </p>
                 {p.client_name ? (
-                  <p className="mt-1 text-lg text-foreground/80">{p.client_name}</p>
+                  <p className="mt-2 text-lg text-foreground/80">{p.client_name}</p>
                 ) : null}
-                <p className="mt-3 inline-block rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+                <p className="mt-4 inline-block rounded-full border border-gold/50 bg-gold/10 px-3 py-1 text-sm font-medium tracking-wide text-foreground">
                   {p.status}
                 </p>
               </Link>
