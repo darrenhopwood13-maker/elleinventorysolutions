@@ -12,4 +12,16 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    resolve: {
+      alias: {
+        // pdf-lib is compiled with importHelpers and imports tslib as a default
+        // import. When bundled for the Cloudflare Worker (production), the CJS
+        // interop wrapper resolves tslib's default to undefined and destructuring
+        // `__extends` throws at module init. Point tslib at its ESM entry so the
+        // named helpers resolve correctly in the Worker bundle.
+        tslib: "tslib/tslib.es6.js",
+      },
+    },
+  },
 });
