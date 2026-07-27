@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
+import { Route as AuthenticatedPropertiesIdReviewRouteImport } from './routes/_authenticated/properties.$id.review'
 import { Route as AuthenticatedPropertiesIdPhotosRouteImport } from './routes/_authenticated/properties.$id.photos'
 
 const AuthRoute = AuthRouteImport.update({
@@ -48,6 +49,12 @@ const AuthenticatedPropertiesIdRoute =
     path: '/properties/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPropertiesIdReviewRoute =
+  AuthenticatedPropertiesIdReviewRouteImport.update({
+    id: '/review',
+    path: '/review',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
+  } as any)
 const AuthenticatedPropertiesIdPhotosRoute =
   AuthenticatedPropertiesIdPhotosRouteImport.update({
     id: '/photos',
@@ -62,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
+  '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +78,7 @@ export interface FileRoutesByTo {
   '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
+  '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +89,7 @@ export interface FileRoutesById {
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
+  '/_authenticated/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,6 +100,7 @@ export interface FileRouteTypes {
     | '/properties/$id'
     | '/properties/new'
     | '/properties/$id/photos'
+    | '/properties/$id/review'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,6 +109,7 @@ export interface FileRouteTypes {
     | '/properties/$id'
     | '/properties/new'
     | '/properties/$id/photos'
+    | '/properties/$id/review'
   id:
     | '__root__'
     | '/'
@@ -107,6 +119,7 @@ export interface FileRouteTypes {
     | '/_authenticated/properties/$id'
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/$id/photos'
+    | '/_authenticated/properties/$id/review'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/properties/$id/review': {
+      id: '/_authenticated/properties/$id/review'
+      path: '/review'
+      fullPath: '/properties/$id/review'
+      preLoaderRoute: typeof AuthenticatedPropertiesIdReviewRouteImport
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
+    }
     '/_authenticated/properties/$id/photos': {
       id: '/_authenticated/properties/$id/photos'
       path: '/photos'
@@ -171,11 +191,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedPropertiesIdRouteChildren {
   AuthenticatedPropertiesIdPhotosRoute: typeof AuthenticatedPropertiesIdPhotosRoute
+  AuthenticatedPropertiesIdReviewRoute: typeof AuthenticatedPropertiesIdReviewRoute
 }
 
 const AuthenticatedPropertiesIdRouteChildren: AuthenticatedPropertiesIdRouteChildren =
   {
     AuthenticatedPropertiesIdPhotosRoute: AuthenticatedPropertiesIdPhotosRoute,
+    AuthenticatedPropertiesIdReviewRoute: AuthenticatedPropertiesIdReviewRoute,
   }
 
 const AuthenticatedPropertiesIdRouteWithChildren =
