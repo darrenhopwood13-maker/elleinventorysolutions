@@ -219,17 +219,21 @@ function ReviewPage() {
       original.condition !== updated.condition;
     const edited = original.edited || (original.source === "ai" && aiFieldsChanged);
 
-    const patch: Record<string, unknown> = {
+    const patch: Partial<Item> = {
       item_name: updated.item_name,
       description: updated.description,
       condition: updated.condition,
       edited,
     };
     if (commentField) {
-      patch[commentField] = updated[commentField] ?? null;
+      (patch as Record<string, unknown>)[commentField] =
+        updated[commentField] ?? null;
     }
 
-    const { error } = await supabase.from("items").update(patch).eq("id", updated.id);
+    const { error } = await supabase
+      .from("items")
+      .update(patch as never)
+      .eq("id", updated.id);
     if (error) {
       toast.error("Could not save");
       return;
