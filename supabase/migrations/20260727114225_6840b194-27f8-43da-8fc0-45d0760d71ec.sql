@@ -1,0 +1,1 @@
+ALTER TABLE public.reports ADD COLUMN share_token TEXT UNIQUE;

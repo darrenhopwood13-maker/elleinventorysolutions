@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { generateReport } from "@/lib/report.functions";
+import { generateReport, getShareLink } from "@/lib/report.functions";
 
 const searchSchema = z.object({
   reportId: z.string().uuid().optional(),
@@ -94,6 +94,8 @@ function ReportGenerationPanel({
   generating: boolean;
   onGenerate: () => void;
 }) {
+  const runGetShareLink = useServerFn(getShareLink);
+  const [sharing, setSharing] = useState(false);
   async function download(path: string, filename: string) {
     const { data, error } = await supabase.storage
       .from("reports")
@@ -106,6 +108,27 @@ function ReportGenerationPanel({
   }
 
   const hasFiles = !!docxPath && !!pdfPath;
+
+  async function copyShareLink() {
+    if (!reportId) return;
+    setSharing(true);
+    try {
+      const { token } = await runGetShareLink({ data: { reportId } });
+      const url = `${window.location.origin}/api/public/reports/${token}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Share link copied", { description: url });
+      } catch {
+        window.prompt("Copy this share link", url);
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Could not create share link",
+      );
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <div className="mt-6 rounded-xl border border-border bg-card p-6">
@@ -151,7 +174,25 @@ function ReportGenerationPanel({
             Download PDF
           </Button>
         ) : null}
+        {hasFiles ? (
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            className="h-14 text-lg"
+            onClick={copyShareLink}
+            disabled={sharing}
+          >
+            {sharing ? "Preparing…" : "Copy share link"}
+          </Button>
+        ) : null}
       </div>
+      {hasFiles ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          The share link opens the PDF in a browser — send it to letting
+          agents, landlords, or tenants without an attachment.
+        </p>
+      ) : null}
       {generating ? (
         <p className="mt-3 text-sm text-muted-foreground">
           This may take a minute — we're building both files with every photo.

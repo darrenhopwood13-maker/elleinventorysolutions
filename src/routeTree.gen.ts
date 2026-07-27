@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
+import { Route as ApiPublicReportsTokenRouteImport } from './routes/api/public/reports/$token'
 import { Route as AuthenticatedPropertiesIdReviewRouteImport } from './routes/_authenticated/properties.$id.review'
 import { Route as AuthenticatedPropertiesIdPhotosRouteImport } from './routes/_authenticated/properties.$id.photos'
 import { Route as AuthenticatedPropertiesIdItemsNewRouteImport } from './routes/_authenticated/properties.$id.items.new'
@@ -50,6 +51,11 @@ const AuthenticatedPropertiesIdRoute =
     path: '/properties/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicReportsTokenRoute = ApiPublicReportsTokenRouteImport.update({
+  id: '/api/public/reports/$token',
+  path: '/api/public/reports/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPropertiesIdReviewRoute =
   AuthenticatedPropertiesIdReviewRouteImport.update({
     id: '/review',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
+  '/api/public/reports/$token': typeof ApiPublicReportsTokenRoute
   '/properties/$id/items/new': typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 export interface FileRoutesByTo {
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
+  '/api/public/reports/$token': typeof ApiPublicReportsTokenRoute
   '/properties/$id/items/new': typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 export interface FileRoutesById {
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/$id/photos': typeof AuthenticatedPropertiesIdPhotosRoute
   '/_authenticated/properties/$id/review': typeof AuthenticatedPropertiesIdReviewRoute
+  '/api/public/reports/$token': typeof ApiPublicReportsTokenRoute
   '/_authenticated/properties/$id/items/new': typeof AuthenticatedPropertiesIdItemsNewRoute
 }
 export interface FileRouteTypes {
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/properties/$id/photos'
     | '/properties/$id/review'
+    | '/api/public/reports/$token'
     | '/properties/$id/items/new'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/properties/$id/photos'
     | '/properties/$id/review'
+    | '/api/public/reports/$token'
     | '/properties/$id/items/new'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/$id/photos'
     | '/_authenticated/properties/$id/review'
+    | '/api/public/reports/$token'
     | '/_authenticated/properties/$id/items/new'
   fileRoutesById: FileRoutesById
 }
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicReportsTokenRoute: typeof ApiPublicReportsTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/properties/$id'
       preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/reports/$token': {
+      id: '/api/public/reports/$token'
+      path: '/api/public/reports/$token'
+      fullPath: '/api/public/reports/$token'
+      preLoaderRoute: typeof ApiPublicReportsTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/properties/$id/review': {
       id: '/_authenticated/properties/$id/review'
@@ -247,17 +267,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicReportsTokenRoute: ApiPublicReportsTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
