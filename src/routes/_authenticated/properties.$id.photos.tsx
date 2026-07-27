@@ -57,6 +57,15 @@ async function runWithConcurrency<T>(
   await Promise.all(runners);
 }
 
+function reportReviewPath(
+  propertyId: string,
+  reportId: string,
+  processed: number,
+  unallocated: number,
+) {
+  return `/properties/${encodeURIComponent(propertyId)}/review?reportId=${encodeURIComponent(reportId)}&processed=${processed}&unallocated=${unallocated}`;
+}
+
 function PhotosPage() {
   const { id: propertyId } = Route.useParams();
   const { reportId } = Route.useSearch();
@@ -328,11 +337,7 @@ function PhotosPage() {
     }
 
     toast.success(`Processed ${itemsProcessed} item${itemsProcessed === 1 ? "" : "s"}`);
-    navigate({
-      to: "/properties/$id/review",
-      params: { id: propertyId },
-      search: { reportId, processed: itemsProcessed, unallocated },
-    });
+    window.location.assign(reportReviewPath(propertyId, reportId, itemsProcessed, unallocated));
   }
 
   const wideCount = photos.filter((p) => p.isWide).length;
