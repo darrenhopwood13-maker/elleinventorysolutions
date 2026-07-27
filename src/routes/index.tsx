@@ -1,24 +1,62 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Elle Inventory Solutions — Property Inventory Reports" },
+      {
+        name: "description",
+        content:
+          "AI-assisted property inventory, check-in, check-out and update reports for letting agents and landlords.",
+      },
+      { property: "og:title", content: "Elle Inventory Solutions" },
+      {
+        property: "og:description",
+        content: "Fast, AI-assisted property inventory reports.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        navigate({ to: "/dashboard", replace: true });
+      } else {
+        setChecking(false);
+      }
+    });
+  }, [navigate]);
+
+  if (checking) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
+      <div className="w-full max-w-xl text-center">
+        <h1 className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
+          Elle Inventory Solutions
+        </h1>
+        <p className="mt-6 text-2xl text-muted-foreground">
+          Fast, AI-assisted property reports.
+        </p>
+        <div className="mt-12">
+          <Button asChild size="lg" className="h-16 px-10 text-xl">
+            <Link to="/auth">Sign in to start</Link>
+          </Button>
+        </div>
+      </div>
+    </main>
   );
 }
