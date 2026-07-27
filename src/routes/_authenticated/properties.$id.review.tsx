@@ -79,6 +79,88 @@ function commentFieldFor(rt: ReportType | null): keyof Item | null {
   return null;
 }
 
+function ReportGenerationPanel({
+  reportId,
+  status,
+  docxPath,
+  pdfPath,
+  generating,
+  onGenerate,
+}: {
+  reportId: string | undefined;
+  status: "draft" | "complete" | null;
+  docxPath: string | null;
+  pdfPath: string | null;
+  generating: boolean;
+  onGenerate: () => void;
+}) {
+  async function download(path: string, filename: string) {
+    const { data, error } = await supabase.storage
+      .from("reports")
+      .createSignedUrl(path, 60 * 60, { download: filename });
+    if (error || !data?.signedUrl) {
+      toast.error("Could not open file");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
+
+  const hasFiles = !!docxPath && !!pdfPath;
+
+  return (
+    <div className="mt-6 rounded-xl border border-border bg-card p-6">
+      <p className="text-2xl font-semibold text-foreground">Report file</p>
+      <p className="mt-1 text-base text-muted-foreground">
+        {status === "complete" && hasFiles
+          ? "Your report is ready. Regenerating will overwrite it."
+          : "Generate a Word (.docx) and PDF version of this report."}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button
+          type="button"
+          size="lg"
+          className="h-14 text-lg"
+          onClick={onGenerate}
+          disabled={generating || !reportId}
+        >
+          {generating
+            ? "Generating…"
+            : hasFiles
+              ? "Regenerate report"
+              : "Generate report"}
+        </Button>
+        {hasFiles && docxPath ? (
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            className="h-14 text-lg"
+            onClick={() => download(docxPath, "report.docx")}
+          >
+            Download Word
+          </Button>
+        ) : null}
+        {hasFiles && pdfPath ? (
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            className="h-14 text-lg"
+            onClick={() => download(pdfPath, "report.pdf")}
+          >
+            Download PDF
+          </Button>
+        ) : null}
+      </div>
+      {generating ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          This may take a minute — we're building both files with every photo.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function ReviewPage() {
   const { id } = Route.useParams();
   const { reportId } = Route.useSearch();
