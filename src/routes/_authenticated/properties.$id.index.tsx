@@ -137,14 +137,13 @@ function PropertyDetail() {
       if (error) throw error;
       if (!report?.id) throw new Error("Report was not created");
 
-      // Non-blocking: status update failure must not prevent navigation.
-      supabase
+      // Status update failure must not prevent navigation, but complete the
+      // request before leaving the page so the browser does not abort it.
+      const { error: statusErr } = await supabase
         .from("properties")
         .update({ status: STATUS_FOR_REPORT[type] })
-        .eq("id", property.id)
-        .then(({ error: statusErr }) => {
-          if (statusErr) console.error("[property] status update failed", statusErr);
-        });
+        .eq("id", property.id);
+      if (statusErr) console.error("[property] status update failed", statusErr);
 
       setDialogOpen(false);
       toast.success(`${type} report started`);
