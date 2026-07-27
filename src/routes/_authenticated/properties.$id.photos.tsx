@@ -223,7 +223,14 @@ function PhotosPage() {
           message: `Analysing photo ${i + 1} of ${total}…`,
         });
 
-        let result: { item_name: string; description: string; condition: string };
+        let result: {
+          item_name: string;
+          description: string;
+          condition: string;
+          check_in_comment: string;
+          check_out_comment: string;
+          update_comment: string;
+        };
         try {
           result = await analyze({
             data: { photoUrl: u.signedUrl, reportType: report.report_type as never },
@@ -234,6 +241,9 @@ function PhotosPage() {
             item_name: "Unidentified item",
             description: "",
             condition: "",
+            check_in_comment: "",
+            check_out_comment: "",
+            update_comment: "",
           };
         }
 
@@ -244,6 +254,9 @@ function PhotosPage() {
           item_name: result.item_name,
           description: result.description || null,
           condition: result.condition || null,
+          check_in_comment: result.check_in_comment || null,
+          check_out_comment: result.check_out_comment || null,
+          update_comment: result.update_comment || null,
           source: "ai",
           edited: false,
         });
