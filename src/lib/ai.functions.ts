@@ -7,28 +7,33 @@ const InputSchema = z.object({
   reportType: z.enum(["Inventory", "Check In", "Check Out", "Update"]),
 });
 
-const SYSTEM_PROMPT = `You are an inventory clerk assistant. Analyse a single photo of an item or feature inside a UK residential property and return concise inventory notes.
-
-Style rules:
-- Telegraphic fragments, NOT full sentences.
-- No liability language, no opinions about who caused damage.
-- item_name: short noun phrase, capitalised (e.g. "Front door", "Cream carpet").
-- description: material / colour / fittings only. No condition, no damage.
-- condition: existing wear or damage with precise counts and locations. If none visible, return "Good, no visible damage".
-
-Example:
-  item_name: "Front door"
-  description: "White painted door with brass numeral 5, spyhole"
-  condition: "Scuffed to low level, 1 pin hole under spyhole"
-
-Return ONLY strict JSON: {"item_name": string, "description": string, "condition": string}. No prose, no markdown.`;
+const COMMENT_FIELD_BY_TYPE = {
+  Inventory: null,
+  "Check In": "check_in_comment",
+  "Check Out": "check_out_comment",
+  Update: "update_comment",
+} as const;
 
 export const analyzeItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
+    // Fetch the brain for this report type at call time so prompt edits
+    // take effect without a code change.
+    const { data: brain, error: brainErr } = await context.supabase
+      .from("brains")
+      .select("prompt_content")
+      .eq("report_type", data.reportType)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (brainErr) throw brainErr;
+    if (!brain?.prompt_content) {
+      throw new Error(`No brain configured for report type "${data.reportType}"`);
+    }
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -39,7 +44,7 @@ export const analyzeItemPhoto = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: brain.prompt_content },
           {
             role: "user",
             content: [
@@ -67,7 +72,7 @@ export const analyzeItemPhoto = createServerFn({ method: "POST" })
     };
     const raw = json.choices?.[0]?.message?.content ?? "{}";
 
-    let parsed: { item_name?: unknown; description?: unknown; condition?: unknown };
+    let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(raw);
     } catch {
@@ -75,13 +80,27 @@ export const analyzeItemPhoto = createServerFn({ method: "POST" })
     }
 
     const item_name =
-      typeof parsed.item_name === "string" && parsed.item_name.trim()
-        ? parsed.item_name.trim()
+      typeof parsed.item_name === "string" && (parsed.item_name as string).trim()
+        ? (parsed.item_name as string).trim()
         : "Unidentified item";
     const description =
-      typeof parsed.description === "string" ? parsed.description.trim() : "";
+      typeof parsed.description === "string" ? (parsed.description as string).trim() : "";
     const condition =
-      typeof parsed.condition === "string" ? parsed.condition.trim() : "";
+      typeof parsed.condition === "string" ? (parsed.condition as string).trim() : "";
 
-    return { item_name, description, condition };
+    const commentField = COMMENT_FIELD_BY_TYPE[data.reportType];
+    let comment = "";
+    if (commentField) {
+      const v = parsed[commentField];
+      comment = typeof v === "string" ? v.trim() : "";
+    }
+
+    return {
+      item_name,
+      description,
+      condition,
+      check_in_comment: commentField === "check_in_comment" ? comment : "",
+      check_out_comment: commentField === "check_out_comment" ? comment : "",
+      update_comment: commentField === "update_comment" ? comment : "",
+    };
   });
