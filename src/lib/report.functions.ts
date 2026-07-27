@@ -293,6 +293,36 @@ export const generateReport = createServerFn({ method: "POST" })
     return { docxPath, pdfPath };
   });
 
+export const getShareLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { reportId: string }) =>
+    z.object({ reportId: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { reportId } = data;
+    const { data: rep, error } = await supabase
+      .from("reports")
+      .select("id, share_token, pdf_path")
+      .eq("id", reportId)
+      .single();
+    if (error || !rep) throw new Error("Report not found");
+    const r = rep as { id: string; share_token: string | null; pdf_path: string | null };
+    if (!r.pdf_path) throw new Error("Generate the report first");
+    let token = r.share_token;
+    if (!token) {
+      token =
+        crypto.randomUUID().replace(/-/g, "") +
+        crypto.randomUUID().replace(/-/g, "");
+      const { error: upErr } = await supabase
+        .from("reports")
+        .update({ share_token: token })
+        .eq("id", reportId);
+      if (upErr) throw new Error("Could not create share link");
+    }
+    return { token };
+  });
+
 // ---------------------------------------------------------------------------
 // DOCX construction
 // ---------------------------------------------------------------------------
