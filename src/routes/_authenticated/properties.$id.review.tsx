@@ -31,6 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { generateReport } from "@/lib/report.functions";
 
 const searchSchema = z.object({
   reportId: z.string().uuid().optional(),
@@ -77,6 +79,88 @@ function commentFieldFor(rt: ReportType | null): keyof Item | null {
   return null;
 }
 
+function ReportGenerationPanel({
+  reportId,
+  status,
+  docxPath,
+  pdfPath,
+  generating,
+  onGenerate,
+}: {
+  reportId: string | undefined;
+  status: "draft" | "complete" | null;
+  docxPath: string | null;
+  pdfPath: string | null;
+  generating: boolean;
+  onGenerate: () => void;
+}) {
+  async function download(path: string, filename: string) {
+    const { data, error } = await supabase.storage
+      .from("reports")
+      .createSignedUrl(path, 60 * 60, { download: filename });
+    if (error || !data?.signedUrl) {
+      toast.error("Could not open file");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
+
+  const hasFiles = !!docxPath && !!pdfPath;
+
+  return (
+    <div className="mt-6 rounded-xl border border-border bg-card p-6">
+      <p className="text-2xl font-semibold text-foreground">Report file</p>
+      <p className="mt-1 text-base text-muted-foreground">
+        {status === "complete" && hasFiles
+          ? "Your report is ready. Regenerating will overwrite it."
+          : "Generate a Word (.docx) and PDF version of this report."}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button
+          type="button"
+          size="lg"
+          className="h-14 text-lg"
+          onClick={onGenerate}
+          disabled={generating || !reportId}
+        >
+          {generating
+            ? "Generating…"
+            : hasFiles
+              ? "Regenerate report"
+              : "Generate report"}
+        </Button>
+        {hasFiles && docxPath ? (
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            className="h-14 text-lg"
+            onClick={() => download(docxPath, "report.docx")}
+          >
+            Download Word
+          </Button>
+        ) : null}
+        {hasFiles && pdfPath ? (
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            className="h-14 text-lg"
+            onClick={() => download(pdfPath, "report.pdf")}
+          >
+            Download PDF
+          </Button>
+        ) : null}
+      </div>
+      {generating ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          This may take a minute — we're building both files with every photo.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function ReviewPage() {
   const { id } = Route.useParams();
   const { reportId } = Route.useSearch();
@@ -87,16 +171,26 @@ function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Item | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Item | null>(null);
+  const [reportStatus, setReportStatus] = useState<"draft" | "complete" | null>(null);
+  const [docxPath, setDocxPath] = useState<string | null>(null);
+  const [pdfPath, setPdfPath] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const runGenerate = useServerFn(generateReport);
 
   async function loadAll() {
     if (!reportId) return;
     setLoading(true);
     const { data: report } = await supabase
       .from("reports")
-      .select("id, report_type")
+      .select("id, report_type, status, docx_path, pdf_path")
       .eq("id", reportId)
       .maybeSingle();
-    if (report) setReportType(report.report_type as ReportType);
+    if (report) {
+      setReportType(report.report_type as ReportType);
+      setReportStatus((report as { status: "draft" | "complete" }).status);
+      setDocxPath((report as { docx_path: string | null }).docx_path ?? null);
+      setPdfPath((report as { pdf_path: string | null }).pdf_path ?? null);
+    }
 
     const { data: rms } = await supabase
       .from("rooms")
@@ -279,6 +373,30 @@ function ReviewPage() {
               + Add item manually
             </Link>
           </Button>
+          <ReportGenerationPanel
+            reportId={reportId}
+            status={reportStatus}
+            docxPath={docxPath}
+            pdfPath={pdfPath}
+            generating={generating}
+            onGenerate={async () => {
+              if (!reportId) return;
+              setGenerating(true);
+              try {
+                const res = await runGenerate({ data: { reportId } });
+                setDocxPath(res.docxPath);
+                setPdfPath(res.pdfPath);
+                setReportStatus("complete");
+                toast.success("Report generated");
+              } catch (err) {
+                toast.error(
+                  err instanceof Error ? err.message : "Could not generate report",
+                );
+              } finally {
+                setGenerating(false);
+              }
+            }}
+          />
         </div>
       </div>
 

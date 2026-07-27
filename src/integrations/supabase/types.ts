@@ -137,7 +137,9 @@ export type Database = {
       reports: {
         Row: {
           created_at: string
+          docx_path: string | null
           id: string
+          pdf_path: string | null
           previous_report_id: string | null
           property_id: string
           report_type: Database["public"]["Enums"]["report_type"]
@@ -145,7 +147,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          docx_path?: string | null
           id?: string
+          pdf_path?: string | null
           previous_report_id?: string | null
           property_id: string
           report_type: Database["public"]["Enums"]["report_type"]
@@ -153,7 +157,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          docx_path?: string | null
           id?: string
+          pdf_path?: string | null
           previous_report_id?: string | null
           property_id?: string
           report_type?: Database["public"]["Enums"]["report_type"]
