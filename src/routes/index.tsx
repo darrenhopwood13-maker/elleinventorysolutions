@@ -45,11 +45,16 @@ function Index() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
       <div className="w-full max-w-xl text-center">
-        <h1 className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
+        <p className="text-xs font-medium uppercase tracking-[0.32em] text-muted-foreground">
           Elle Inventory Solutions
+        </p>
+        <span className="gold-rule mx-auto mt-6" aria-hidden />
+        <h1 className="font-serif mt-6 text-5xl font-medium tracking-tight text-foreground sm:text-6xl">
+          Considered inventories for considered homes.
         </h1>
-        <p className="mt-6 text-2xl text-muted-foreground">
-          Fast, AI-assisted property reports.
+        <p className="mt-6 text-xl text-muted-foreground">
+          AI-assisted inventory, check-in, check-out and update reports —
+          crafted for Mayfair and Hertfordshire.
         </p>
         <div className="mt-12">
           <Button asChild size="lg" className="h-16 px-10 text-xl">
