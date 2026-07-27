@@ -128,29 +128,35 @@ function PropertyDetail() {
         .select("id")
         .single();
       if (error) throw error;
+      if (!report?.id) throw new Error("Report was not created");
 
-      await supabase
+      // Non-blocking: status update failure must not prevent navigation.
+      supabase
         .from("properties")
         .update({ status: STATUS_FOR_REPORT[type] })
-        .eq("id", property.id);
+        .eq("id", property.id)
+        .then(({ error: statusErr }) => {
+          if (statusErr) console.error("[property] status update failed", statusErr);
+        });
 
-      toast.success(`${type} report started`);
       setDialogOpen(false);
-      navigate({
+      toast.success(`${type} report started`);
+      await navigate({
         to: "/properties/$id/photos",
         params: { id: property.id },
         search: { reportId: report.id },
       });
     } catch (err) {
+      console.error("[property] create report failed", err);
       toast.error(err instanceof Error ? err.message : "Could not create report");
     } finally {
       setCreating(false);
     }
   }
 
-  function openReport(r: { id: string; status: string }) {
+  async function openReport(r: { id: string; status: string }) {
     if (r.status === "draft") {
-      navigate({
+      await navigate({
         to: "/properties/$id/photos",
         params: { id },
         search: { reportId: r.id },
