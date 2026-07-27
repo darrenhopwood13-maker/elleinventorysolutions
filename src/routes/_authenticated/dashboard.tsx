@@ -22,6 +22,22 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const [q, setQ] = useState("");
 
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return false;
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (error) return false;
+      return !!data;
+    },
+  });
+
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties"],
     queryFn: async () => {
@@ -64,9 +80,16 @@ function Dashboard() {
             </h1>
             <span className="gold-rule mt-4" aria-hidden />
           </div>
-          <Button variant="ghost" onClick={handleSignOut} className="text-base">
-            Sign out
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button variant="ghost" onClick={handleSignOut} className="text-base">
+              Sign out
+            </Button>
+            {isAdmin ? (
+              <Button asChild variant="ghost" className="text-sm text-muted-foreground">
+                <Link to="/admin/brains">AI Brains</Link>
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-8">
