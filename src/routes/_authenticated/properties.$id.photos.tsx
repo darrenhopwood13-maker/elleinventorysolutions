@@ -237,6 +237,12 @@ function PhotosPage() {
           });
         } catch (err) {
           console.error("AI analyse failed", err);
+          const msg = err instanceof Error ? err.message : "";
+          if (/No AI brain is configured/i.test(msg)) {
+            toast.error(msg);
+            setStage({ kind: "idle" });
+            return;
+          }
           result = {
             item_name: "Unidentified item",
             description: "",
