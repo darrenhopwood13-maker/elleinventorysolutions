@@ -32,7 +32,9 @@ export const analyzeItemPhoto = createServerFn({ method: "POST" })
       .maybeSingle();
     if (brainErr) throw brainErr;
     if (!brain?.prompt_content) {
-      throw new Error(`No brain configured for report type "${data.reportType}"`);
+      throw new Error(
+        `No AI brain is configured for "${data.reportType}" reports yet. Ask an admin to add one in Settings → Brains, then try again.`,
+      );
     }
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
